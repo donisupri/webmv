@@ -130,7 +130,7 @@
 
     // --- FUNGSI UNTUK MENGAMBIL DATA FILM POPULER ---
     async function fetchPopularMovies() {
-        const url = `${apiBase}/movie/popular?language=id-ID`;
+        const url = `${apiBase}/movie/popular?language=id-ID&page=1`;
         try {
             const response = await fetch(url);
             if (!response.ok) {
