@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nonton Film & Series Online</title>
+    <style>
+        /* CSS Dasar untuk Tampilan */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #141414;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #e50914; /* Warna Merah Netflix */
+        }
+        #movie-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+        .movie-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #2a2a2a;
+        }
+        .movie-card:hover {
+            transform: scale(1.05);
+        }
+        .movie-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .movie-card h3 {
+            font-size: 14px;
+            padding: 10px;
+            margin: 0;
+            text-align: center;
+        }
+        #movie-detail {
+            display: none; /* Sembunyikan detail awalnya */
+            text-align: center;
+        }
+        #movie-detail iframe {
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            border: none;
+            border-radius: 8px;
+        }
+        #movie-detail .info {
+            margin-top: 20px;
+        }
+        .back-button {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            background-color: #f40612;
+        }
+        .loading {
+            text-align: center;
+            font-size: 20px;
+            padding: 40px;
+        }
+        /* Atribusi TMDB (WAJIB) */
+        .tmdb-attribution {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #888;
+        }
+        .tmdb-attribution a {
+            color: #888;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Koleksi Film Populer</h1>
+    
+    <!-- Tombol Kembali, awalnya disembunyikan -->
+    <button id="backButton" class="back-button" style="display: none;">← Kembali ke Daftar</button>
+
+    <!-- Area untuk menampilkan daftar film -->
+    <div id="movie-list">
+        <p class="loading">Memuat data film...</p>
+    </div>
+
+    <!-- Area untuk menampilkan detail film dan iframe video -->
+    <div id="movie-detail">
+        <!-- Konten akan dimuat secara dinamis dengan JavaScript -->
+    </div>
+
+    <!-- ATRIBUSI WAJIB DARI TMDB -->
+    <div class="tmdb-attribution">
+        Produk ini menggunakan API TMDB tetapi tidak didukung atau disertifikasi oleh TMDB.
+        <br>
+        <a href="https://www.themoviedb.org/" target="_blank">
+            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_long_1-8ba2ac31f5ae006783fab2930b6dcb48c72924d9a3d4626bc36559e235a7e9f5.svg" alt="The Movie Database (TMDB)" width="100">
+        </a>
+    </div>
+</div>
+
+<script>
+    // GANTI DENGAN API KEY KAMU
+    const apiKey = 'YOUR_TMDB_API_KEY_HERE'; 
+    const movieListContainer = document.getElementById('movie-list');
+    const movieDetailContainer = document.getElementById('movie-detail');
+    const backButton = document.getElementById('backButton');
+
+    // --- FUNGSI UNTUK MENGAMBIL DATA FILM POPULER ---
+    async function fetchPopularMovies() {
+        const url = `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=id-ID&page=1`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            displayMovies(data.results);
+        } catch (error) {
+            movieListContainer.innerHTML = `<p class="loading">Gagal memuat data. Periksa API Key dan koneksi internetmu. Error: ${error.message}</p>`;
+            console.error('Error fetching movies:', error);
+        }
+    }
+
+    // --- FUNGSI UNTUK MENAMPILKAN DAFTAR FILM ---
+    function displayMovies(movies) {
+        movieListContainer.innerHTML = ''; // Kosongkan container dulu
+        if (movies.length === 0) {
+            movieListContainer.innerHTML = '<p class="loading">Tidak ada film yang ditemukan.</p>';
+            return;
+        }
+
+        movies.forEach(movie => {
+            const movieCard = document.createElement('div');
+            movieCard.classList.add('movie-card');
+            movieCard.setAttribute('data-tmdb-id', movie.id);
+            
+            const posterUrl = movie.poster_path 
+                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+                : 'https://via.placeholder.com/500x750?text=No+Image'; // Gambar placeholder jika tidak ada poster
+
+            movieCard.innerHTML = `
+                <img src="${posterUrl}" alt="${movie.title}">
+                <h3>${movie.title}</h3>
+            `;
+            
+            // Tambahkan event listener untuk klik
+            movieCard.addEventListener('click', () => showMovieDetail(movie.id));
+            
+            movieListContainer.appendChild(movieCard);
+        });
+    }
+
+    // --- FUNGSI UNTUK MENAMPILKAN DETAIL FILM DAN IFRAME ---
+    async function showMovieDetail(tmdbId) {
+        // Sembunyikan daftar film, tampilkan detail
+        movieListContainer.style.display = 'none';
+        backButton.style.display = 'block';
+        movieDetailContainer.style.display = 'block';
+        movieDetailContainer.innerHTML = '<p class="loading">Memuat detail film...</p>';
+
+        // Ambil detail film untuk menampilkan informasi
+        const detailUrl = `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${apiKey}&language=id-ID`;
+        const movieData = await fetch(detailUrl).then(res => res.json());
+
+        // PILIH SALAH SATU SERVER VIDEO
+        // Pilihan 1: xprime.tv
+        const videoSrc = `https://xprime.tv/watch/${tmdbId}`;
+        // Pilihan 2: vsrc.su
+        // const videoSrc = `https://vsrc.su/embed/${tmdbId}`;
+
+        movieDetailContainer.innerHTML = `
+            <h2>${movieData.title}</h2>
+            <div class="info">
+                <p><strong>Tanggal Rilis:</strong> ${movieData.release_date}</p>
+                <p><strong>Rating:</strong> ${movieData.vote_average} / 10</p>
+                <p>${movieData.overview}</p>
+            </div>
+            <h3>Pemain Film</h3>
+            <iframe 
+                src="${videoSrc}" 
+                frameborder="0" 
+                allowfullscreen>
+            </iframe>
+        `;
+    }
+
+    // --- EVENT LISTENER UNTUK TOMBOL KEMBALI ---
+    backButton.addEventListener('click', () => {
+        movieDetailContainer.style.display = 'none';
+        backButton.style.display = 'none';
+        movieListContainer.style.display = 'grid';
+    });
+
+    // --- JALANKAN FUNGSI UTAMA SAAT HALAMAN DIMUAT ---
+    document.addEventListener('DOMContentLoaded', fetchPopularMovies);
+
+</script>
+
+</body>
+</html>
