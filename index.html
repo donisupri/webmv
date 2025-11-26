@@ -123,14 +123,14 @@
 
 <script>
     // GANTI DENGAN API KEY KAMU
-    const apiKey = 'YOUR_TMDB_API_KEY_HERE'; 
+    const apiBase = 'https://tmdb-proxy-d0n.donisuprimail.workers.dev/api'; 
     const movieListContainer = document.getElementById('movie-list');
     const movieDetailContainer = document.getElementById('movie-detail');
     const backButton = document.getElementById('backButton');
 
     // --- FUNGSI UNTUK MENGAMBIL DATA FILM POPULER ---
     async function fetchPopularMovies() {
-        const url = `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=id-ID&page=1`;
+        const url = `${apiBase}/movie/popular?language=id-ID`;
         try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -182,7 +182,7 @@
         movieDetailContainer.innerHTML = '<p class="loading">Memuat detail film...</p>';
 
         // Ambil detail film untuk menampilkan informasi
-        const detailUrl = `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${apiKey}&language=id-ID`;
+        const detailUrl = `${apiBase}/movie/${tmdbId}?language=id-ID`;
         const movieData = await fetch(detailUrl).then(res => res.json());
 
         // PILIH SALAH SATU SERVER VIDEO
